@@ -1,17 +1,20 @@
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
+
 @dataclass
 class FieldSpec:
     c_type: str
     name: str
     array_len: Optional[str] = None
 
+
 @dataclass
 class ArgSpec:
     c_type: str
     name: str
     array_len: Optional[str] = None
+
 
 @dataclass
 class StructSpec:
@@ -20,11 +23,13 @@ class StructSpec:
     ptr_name: Optional[str] = None
     fields: Optional[List[FieldSpec]] = None
 
+
 @dataclass
 class ClientSpec:
     name: str
     return_type: str
     args: List[ArgSpec] = field(default_factory=list)
+
 
 @dataclass
 class ServerSpec:
@@ -32,28 +37,32 @@ class ServerSpec:
     return_type: str
     args: List[ArgSpec] = field(default_factory=list)
 
+
 @dataclass
 class ClientBindingsSpec:
     name: str
     prototypes: List[ClientSpec] = field(default_factory=list)
 
+
 @dataclass
 class ComponentSpec:
     name: str
     public_headers: List[str]
-    instance_type: str
-    init_fn: str
-    step_fn: str
+    instance_type: Optional[str] = None
+    init_fn: str = ''
+    step_fn: str = ''
     inputs: Optional[StructSpec] = None
     outputs: Optional[StructSpec] = None
     config: Optional[StructSpec] = None
     client_bindings: Optional[ClientBindingsSpec] = None
     servers: List[ServerSpec] = field(default_factory=list)
 
+
 @dataclass
 class SwcImportSpec:
     name: str
     yaml: str
+
 
 @dataclass
 class InstanceSpec:
@@ -63,10 +72,12 @@ class InstanceSpec:
     user_static_bind: bool = False
     client_bindings: Dict[str, str] = field(default_factory=dict)
 
+
 @dataclass
 class ExpiryPointSpec:
     offset_ms: int
     run: List[str] = field(default_factory=list)
+
 
 @dataclass
 class ScheduleSpec:
@@ -75,10 +86,12 @@ class ScheduleSpec:
     switch_mode: str
     expiry_points: List[ExpiryPointSpec] = field(default_factory=list)
 
+
 @dataclass
 class SchedulesSpec:
     default: str
     items: List[ScheduleSpec] = field(default_factory=list)
+
 
 @dataclass
 class EngineSpec:
@@ -93,9 +106,10 @@ class EngineSpec:
     enable_input_info_api: bool
     enable_output_info_api: bool
     enable_config_info_api: bool
-    ovr_slot_count: int
-    ovr_buffer_len: int
+    ovr_slot_count: int = 0
+    ovr_buffer_len: int = 0
     generate_validator_header: bool = False
+
 
 @dataclass
 class EcuSpec:
