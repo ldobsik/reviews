@@ -1,0 +1,13 @@
+#ifndef SWCIF_INTCFG_H_
+#define SWCIF_INTCFG_H_
+#include "SwcIf_Cfg.h"
+{% for hdr in ecu.engine.integration_headers %}
+#include "{{ hdr }}"
+{% endfor %}
+#ifndef SWCIF_ENTER_CRITICAL
+#define SWCIF_ENTER_CRITICAL() do { } while(0)
+#endif
+#ifndef SWCIF_EXIT_CRITICAL
+#define SWCIF_EXIT_CRITICAL() do { } while(0)
+#endif
+#endif /* SWCIF_INTCFG_H_ */

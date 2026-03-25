@@ -1,0 +1,45 @@
+component: DRLPOS
+public_headers: [DRLPOS.h]
+instance_type: DRLPOS_InstanceType
+init_fn: DRLPOS_initialize
+step_fn: DRLPOS_step
+inputs:
+  type: DRLPOS_In_type
+  name: rx
+  fields:
+    - { type: DRLPOS_CONTROL_e, name: drlpos_stadiumActivationRequest }
+    - { type: DRLPOS_CONTROL_e, name: drlpos_wingActivationRequest }
+    - { type: uint8_t, name: drlpos_suppressDrl }
+    - { type: uint8_t, name: drlpos_suppressPos }
+outputs:
+  type: DRLPOS_Out_type
+  name: tx
+  fields:
+    - { type: float, name: drlpos_stadiumSegmentsIntensity }
+    - { type: "float[8u]", name: drlpos_wingSegmentsIntensity }
+    - { type: DRLPOS_CONTROL_e, name: drlpos_stadiumStatus }
+    - { type: DRLPOS_CONTROL_e, name: drlpos_wingStatus }
+config:
+  type: DRLPOS_CfgType
+  ptr_name: cfg
+  fields:
+    - { type: uint8_t, name: variant_id }
+    - { type: uint16_t, name: timeout_ms }
+client_bindings:
+  name: api
+  prototypes:
+    - name: LampDriver_SetIntensity
+      return_type: void
+      args:
+        - { type: uint8_t, name: channel }
+        - { type: float, name: intensity }
+    - name: RearLampECU_ReadStatusFallback
+      return_type: DRLPOS_CONTROL_e
+      args: []
+servers:
+  - name: DRLPOS_GetStatus
+    return_type: DRLPOS_CONTROL_e
+    args: []
+  - name: DRLPOS_ForceOff
+    return_type: void
+    args: []

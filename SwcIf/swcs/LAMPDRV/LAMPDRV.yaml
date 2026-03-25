@@ -1,0 +1,14 @@
+component: LAMPDRV
+public_headers: [LAMPDRV.h]
+instance_type: LAMPDRV_InstanceType
+init_fn: LAMPDRV_initialize
+step_fn: LAMPDRV_step
+outputs:
+  type: LAMPDRV_Out_type
+  name: Signals
+servers:
+  - name: LAMPDRV_SetIntensity
+    return_type: void
+    args:
+      - { type: uint8_t, name: channel }
+      - { type: float, name: intensity }

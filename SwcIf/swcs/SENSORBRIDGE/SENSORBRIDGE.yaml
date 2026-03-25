@@ -1,0 +1,16 @@
+component: SENSORBRIDGE
+public_headers: [SENSORBRIDGE.h]
+init_fn: ""
+step_fn: SENSORBRIDGE_step
+inputs:
+  type: SENSORBRIDGE_IO_type
+  name: IO
+  fields:
+    - { type: float, name: temperature_c }
+    - { type: float, name: supply_v }
+outputs:
+  type: SENSORBRIDGE_IO_type
+  name: IO
+  fields:
+    - { type: float, name: temperature_c }
+    - { type: float, name: supply_v }

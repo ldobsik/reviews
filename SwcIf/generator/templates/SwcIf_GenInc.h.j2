@@ -1,0 +1,15 @@
+/* ========================================================================== */
+/*  FILE: SwcIf_GenInc.h (generated)                                          */
+/* ========================================================================== */
+/**
+ * @file SwcIf_GenInc.h
+ * @brief Generated include aggregator for instantiated SWCs.
+ */
+
+#ifndef SWCIF_GENINC_H_
+#define SWCIF_GENINC_H_
+{% for h in headers -%}
+#include "{{ h }}"
+{% endfor %}
+#endif /* SWCIF_GENINC_H_ */
+

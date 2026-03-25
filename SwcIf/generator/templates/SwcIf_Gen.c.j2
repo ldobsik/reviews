@@ -1,0 +1,204 @@
+/* ========================================================================== */
+/* FILE: SwcIf_Gen.c (generated)                                               */
+/* ========================================================================== */
+/**
+ * @file SwcIf_Gen.c
+ * @brief Generated SwcIf integration: metadata, bindings, closures,
+ *        schedule tables and runtime lookup tables.
+ */
+#include <stdint.h>
+#include <stddef.h>
+
+#include "std_types.h"
+#include "SwcIf.h"
+#include "SwcIf_Priv.h"
+#include "SwcIf_Gen.h"
+#include "SwcIf_IntCfg.h"
+{% if ecu.engine.generate_validator_header %}#include "SwcIf_GenValidators.h"
+{% endif %}
+
+#define SWCIF_RAW_META_DECL_(TYPE_NAME, FIELD_NAME) \
+    { (uint16_t)offsetof(TYPE_NAME, FIELD_NAME), (uint16_t)sizeof(((TYPE_NAME *)0)->FIELD_NAME) }
+
+{% for comp in components %}/* -------------------------------------------------------------------------- */
+/* {{ comp.name }}                                                             */
+/* -------------------------------------------------------------------------- */
+#if (SWCIF_ANY_RAW_OR_OVR)
+{% if comp.inputs and comp.inputs.fields is not none %}static const SwcIf_RawEntryMetaType SwcIf_InputMeta_{{ comp.name }}_[] = {
+{% for f in comp.inputs.fields %}    SWCIF_RAW_META_DECL_({{ comp.inputs.type }}, {{ f.name }}),
+{% endfor %}};
+
+{% endif %}{% if comp.outputs and comp.outputs.fields is not none %}static const SwcIf_RawEntryMetaType SwcIf_OutputMeta_{{ comp.name }}_[] = {
+{% for f in comp.outputs.fields %}    SWCIF_RAW_META_DECL_({{ comp.outputs.type }}, {{ f.name }}),
+{% endfor %}};
+
+{% endif %}{% if comp.config and comp.config.fields is not none %}static const SwcIf_RawEntryMetaType SwcIf_ConfigMeta_{{ comp.name }}_[] = {
+{% for f in comp.config.fields %}    SWCIF_RAW_META_DECL_({{ comp.config.type }}, {{ f.name }}),
+{% endfor %}};
+
+{% endif %}#endif /* SWCIF_ANY_RAW_OR_OVR */
+
+enum {
+    SwcIf_InputEntryCount_{{ comp.name }}_  = {% if comp.inputs and comp.inputs.fields is not none %}(uint16_t)(sizeof(SwcIf_InputMeta_{{ comp.name }}_) / sizeof(SwcIf_InputMeta_{{ comp.name }}_[0])){% else %}0u{% endif %},
+    SwcIf_OutputEntryCount_{{ comp.name }}_ = {% if comp.outputs and comp.outputs.fields is not none %}(uint16_t)(sizeof(SwcIf_OutputMeta_{{ comp.name }}_) / sizeof(SwcIf_OutputMeta_{{ comp.name }}_[0])){% else %}0u{% endif %},
+    SwcIf_ConfigEntryCount_{{ comp.name }}_ = {% if comp.config and comp.config.fields is not none %}(uint16_t)(sizeof(SwcIf_ConfigMeta_{{ comp.name }}_) / sizeof(SwcIf_ConfigMeta_{{ comp.name }}_[0])){% else %}0u{% endif %}
+};
+
+static void init_component_{{ comp.name }}_(void * const pself)
+{
+{% if comp.init_fn %}{% if comp.instance_type %}    {{ comp.init_fn }}(({{ comp.instance_type }} *)pself);
+{% else %}    (void)pself;
+    {{ comp.init_fn }}();
+{% endif %}{% else %}    (void)pself;
+{% endif %}}
+
+static void step_component_{{ comp.name }}_(void * const pself)
+{
+{% if comp.step_fn %}{% if comp.instance_type %}    {{ comp.step_fn }}(({{ comp.instance_type }} *)pself);
+{% else %}    (void)pself;
+    {{ comp.step_fn }}();
+{% endif %}{% else %}    (void)pself;
+{% endif %}}
+
+{% endfor %}{% for inst in instances %}{% if inst.component.instance_type %}static {{ inst.component.instance_type }} SwcIf_Instance_{{ inst.name }}_;
+{% else %}static uint8_t SwcIf_Instance_{{ inst.name }}_Stub_;
+{% endif %}{% endfor %}
+
+{% for inst in instances %}{% if inst.component.config and inst.default_config_ptr %}static const {{ inst.component.config.type }} * const SwcIf_DefaultCfgPtr_{{ inst.name }}_ = {{ inst.default_config_ptr }};
+{% endif %}{% endfor %}
+
+{% for inst in instances %}{% for cb in inst.client_bindings %}{% if not cb.bind_expr %}static {{ cb.prototype.return_type }} SwcIf_NoOpClient_{{ inst.name }}_{{ cb.prototype.name }}_({% if cb.prototype.args|length == 0 %}void{% else %}{% for arg in cb.prototype.args %}{{ arg.c_type }} {{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %})
+{
+{% for arg in cb.prototype.args %}    (void){{ arg.name }};
+{% endfor %}{% if cb.prototype.return_type != 'void' %}    {{ cb.prototype.return_type }} ret = {0};
+    return ret;
+{% endif %}}
+
+{% endif %}{% endfor %}{% endfor %}{% for inst in instances %}{% for server in inst.component.servers %}{{ server.return_type }} SWCIF_SERVER({{ inst.name }}, {{ server.name }})({% if server.args|length == 0 %}void{% else %}{% for arg in server.args %}{{ arg.c_type }} {{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %})
+{
+{% if server.return_type != 'void' %}    {{ server.return_type }} ret = {0};
+{% if inst.component.instance_type %}    ret = {{ server.name }}(&SwcIf_Instance_{{ inst.name }}_{% if server.args|length > 0 %}, {% for arg in server.args %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %});
+{% else %}    ret = {{ server.name }}({% if server.args|length > 0 %}{% for arg in server.args %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}void{% endif %});
+{% endif %}    return ret;
+{% else %}{% if inst.component.instance_type %}    {{ server.name }}(&SwcIf_Instance_{{ inst.name }}_{% if server.args|length > 0 %}, {% for arg in server.args %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %});
+{% else %}    {{ server.name }}({% if server.args|length > 0 %}{% for arg in server.args %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}{% endif %});
+{% endif %}{% endif %}}
+
+{% endfor %}static void bind_instance_{{ inst.name }}_(void * const pself)
+{
+{% if inst.component.instance_type %}    {{ inst.component.instance_type }} * const self = ({{ inst.component.instance_type }} *)pself;
+{% if inst.component.config %}    self->{{ inst.component.config.ptr_name }} = {% if inst.default_config_ptr %}SwcIf_DefaultCfgPtr_{{ inst.name }}_{% else %}NULL_PTR{% endif %};
+{% endif %}{% if inst.component.client_bindings %}{% for cb in inst.client_bindings %}    self->{{ inst.component.client_bindings.name }}.{{ cb.prototype.name }} = {% if cb.bind_expr %}{{ cb.bind_expr }}{% else %}SwcIf_NoOpClient_{{ inst.name }}_{{ cb.prototype.name }}_{% endif %};
+{% endfor %}{% endif %}{% if inst.user_static_bind %}    SwcIf_StaticBind_{{ inst.name }}(self);
+{% else %}    (void)self;
+{% endif %}{% else %}    (void)pself;
+{% if inst.component.config %}    {{ inst.component.config.ptr_name }} = {% if inst.default_config_ptr %}SwcIf_DefaultCfgPtr_{{ inst.name }}_{% else %}NULL_PTR{% endif %};
+{% endif %}{% if inst.component.client_bindings %}{% for cb in inst.client_bindings %}    {{ inst.component.client_bindings.name }}.{{ cb.prototype.name }} = {% if cb.bind_expr %}{{ cb.bind_expr }}{% else %}SwcIf_NoOpClient_{{ inst.name }}_{{ cb.prototype.name }}_{% endif %};
+{% endfor %}{% endif %}{% if inst.user_static_bind %}    SwcIf_StaticBind_{{ inst.name }}();
+{% endif %}{% endif %}}
+
+{% if inst.component.outputs %}const {{ inst.component.outputs.type }} * SwcIf_OutputCPtr_{{ inst.name }}(void)
+{
+{% if inst.component.instance_type %}    return &SwcIf_Instance_{{ inst.name }}_.{{ inst.component.outputs.name }};
+{% else %}    return &{{ inst.component.outputs.name }};
+{% endif %}}
+
+{% endif %}static void input_route_instance_{{ inst.name }}_(void * const pself)
+{
+{% if inst.component.inputs %}{% if inst.component.instance_type %}    SwcIf_InputRoute_{{ inst.name }}(({{ inst.component.instance_type }} *)pself);
+{% else %}    (void)pself;
+    SwcIf_InputRoute_{{ inst.name }}();
+{% endif %}{% else %}    (void)pself;
+{% endif %}}
+
+static void output_route_instance_{{ inst.name }}_(void * const pself)
+{
+{% if inst.component.outputs %}{% if inst.component.instance_type %}    SwcIf_OutputRoute_{{ inst.name }}(({{ inst.component.instance_type }} *)pself);
+{% else %}    (void)pself;
+    SwcIf_OutputRoute_{{ inst.name }}();
+{% endif %}{% else %}    (void)pself;
+{% endif %}}
+
+{% endfor %}{% for sched in schedules %}{% for ep in sched.expiry_points %}static const SwcIf_InstanceType SwcIf_RunList_{{ sched.name }}_{{ loop.index0 }}_[] = {
+{% for name in ep.run %}    SWCIF_INSTANCE_{{ name }}{% if not loop.last %},{% endif %}
+{% endfor %}};
+
+{% endfor %}static const SwcIf_ScheduleExpiryPointType SwcIf_ScheduleExpiryPoints_{{ sched.name }}_[] = {
+{% for ep in sched.expiry_points %}    { {{ ep.offset_tick }}u, {{ ep.run|length }}u, SwcIf_RunList_{{ sched.name }}_{{ loop.index0 }}_ },
+{% endfor %}    { {{ sched.period_tick }}u, 0u, NULL_PTR }
+};
+
+{% endfor %}const SwcIf_ScheduleSwitchModeType SwcIf_ScheduleSwitchMode_[SWCIF_SCHEDULE_COUNT] = {
+{% for sched in schedules %}    {{ 'SWCIF_SCHEDULE_SWITCH_IMMEDIATE' if sched.switch_mode == 'immediate' else 'SWCIF_SCHEDULE_SWITCH_DEFERRED' }},
+{% endfor %}};
+
+const SwcIf_ScheduleExpiryPointType * const SwcIf_ScheduleExpiryPointTable_[SWCIF_SCHEDULE_COUNT] = {
+{% for sched in schedules %}    SwcIf_ScheduleExpiryPoints_{{ sched.name }}_,
+{% endfor %}};
+
+const SwcIf_ScheduleType SwcIf_DefaultSchedule_ = {{ default_schedule.enum_name }};
+
+const SwcIf_GenericInstanceFnType SwcIf_BindFnTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    bind_instance_{{ inst.name }}_,
+{% endfor %}};
+
+const SwcIf_GenericInstanceFnType SwcIf_InitFnTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    init_component_{{ inst.component.name }}_,
+{% endfor %}};
+
+const SwcIf_GenericInstanceFnType SwcIf_StepFnTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    step_component_{{ inst.component.name }}_,
+{% endfor %}};
+
+void * const SwcIf_InstanceObjectTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}{% if inst.component.instance_type %}    &SwcIf_Instance_{{ inst.name }}_,
+{% else %}    &SwcIf_Instance_{{ inst.name }}_Stub_,
+{% endif %}{% endfor %}};
+
+const SwcIf_GenericRouteFnType SwcIf_InputUpdateTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    input_route_instance_{{ inst.name }}_,
+{% endfor %}};
+
+const SwcIf_GenericRouteFnType SwcIf_OutputUpdateTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    output_route_instance_{{ inst.name }}_,
+{% endfor %}};
+
+#if (SWCIF_ANY_RAW_OR_OVR)
+const SwcIf_RawEntryMetaType * const SwcIf_InputMetaTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    {% if inst.component.inputs and inst.component.inputs.fields is not none %}SwcIf_InputMeta_{{ inst.component.name }}_{% else %}NULL_PTR{% endif %},
+{% endfor %}};
+
+const SwcIf_RawEntryMetaType * const SwcIf_OutputMetaTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    {% if inst.component.outputs and inst.component.outputs.fields is not none %}SwcIf_OutputMeta_{{ inst.component.name }}_{% else %}NULL_PTR{% endif %},
+{% endfor %}};
+
+const SwcIf_RawEntryMetaType * const SwcIf_ConfigMetaTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    {% if inst.component.config and inst.component.config.fields is not none %}SwcIf_ConfigMeta_{{ inst.component.name }}_{% else %}NULL_PTR{% endif %},
+{% endfor %}};
+
+const uint16_t SwcIf_InputEntryCountTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    SwcIf_InputEntryCount_{{ inst.component.name }}_,
+{% endfor %}};
+
+const uint16_t SwcIf_OutputEntryCountTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    SwcIf_OutputEntryCount_{{ inst.component.name }}_,
+{% endfor %}};
+
+const uint16_t SwcIf_ConfigEntryCountTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    SwcIf_ConfigEntryCount_{{ inst.component.name }}_,
+{% endfor %}};
+
+uint8_t * const SwcIf_InputBaseTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    {% if inst.component.inputs and inst.component.inputs.fields is not none %}{% if inst.component.instance_type %}(uint8_t *)&SwcIf_Instance_{{ inst.name }}_.{{ inst.component.inputs.name }}{% else %}(uint8_t *)&{{ inst.component.inputs.name }}{% endif %}{% else %}NULL_PTR{% endif %},
+{% endfor %}};
+
+uint8_t * const SwcIf_OutputBaseTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    {% if inst.component.outputs and inst.component.outputs.fields is not none %}{% if inst.component.instance_type %}(uint8_t *)&SwcIf_Instance_{{ inst.name }}_.{{ inst.component.outputs.name }}{% else %}(uint8_t *)&{{ inst.component.outputs.name }}{% endif %}{% else %}NULL_PTR{% endif %},
+{% endfor %}};
+
+static const void * const SwcIf_NullConfigPtr_ = NULL_PTR;
+
+const void * const * const SwcIf_ConfigPtrAddressTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    {% if inst.component.config %}{% if inst.component.instance_type %}(const void * const *)&SwcIf_Instance_{{ inst.name }}_.{{ inst.component.config.ptr_name }}{% else %}(const void * const *)&{{ inst.component.config.ptr_name }}{% endif %}{% else %}(const void * const *)&SwcIf_NullConfigPtr_{% endif %},
+{% endfor %}};
+#endif /* SWCIF_ANY_RAW_OR_OVR */

@@ -1,0 +1,26 @@
+component: FILTER
+public_headers: [FILTER.h]
+init_fn: FILTER_init
+step_fn: FILTER_step
+inputs:
+  type: FILTER_In_type
+  name: rx
+  fields:
+    - { type: float, name: x }
+outputs:
+  type: FILTER_Out_type
+  name: tx
+  fields:
+    - { type: float, name: y }
+config:
+  type: FILTER_CfgType
+  ptr_name: FILTER_cfg
+client_bindings:
+  name: FILTER_Api
+  prototypes:
+    - name: LampDriver_SetIntensity
+      return_type: void
+      args: [ { type: uint8_t, name: channel }, { type: float, name: intensity } ]
+    - name: Reset
+      return_type: void
+      args: []

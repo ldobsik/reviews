@@ -1,0 +1,29 @@
+name: HeartbeatECU
+swcs:
+  - { name: HEARTBEAT, yaml: swcs/HEARTBEAT/HEARTBEAT.yaml }
+engine:
+  mainfunction_period_ms: 5
+  integration_headers: []
+  enable_input_raw_api: true
+  enable_output_raw_api: true
+  enable_config_raw_api: true
+  enable_input_ovr_api: true
+  enable_output_ovr_api: true
+  enable_instance_info_api: true
+  enable_input_info_api: true
+  enable_output_info_api: true
+  enable_config_info_api: true
+  ovr_slot_count: 2
+  ovr_buffer_len: 16
+  generate_validator_header: true
+instances:
+  - name: HEARTBEAT_0
+    component: HEARTBEAT
+schedules:
+  default: NORMAL
+  items:
+    - name: NORMAL
+      period_ms: 10
+      switch_mode: deferred
+      expiry_points:
+        - { offset_ms: 0, run: [HEARTBEAT_0] }

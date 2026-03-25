@@ -1,0 +1,66 @@
+/* ========================================================================== */
+/* FILE: SwcIf_GenMeta.c (generated) */
+/* ========================================================================== */
+/**
+ * @file SwcIf_GenMeta.c
+ * @brief Generated logical INFO metadata definitions.
+ */
+#include <stdint.h>
+#include "std_types.h"
+#include "SwcIf_Gen.h"
+#include "SwcIf_GenMeta.h"
+{% for comp in components %}/* --- {{ comp.name }} --- */
+{% if comp.inputs and comp.inputs.fields is not none %}static const char * const SwcIf_InputEntryNames_{{ comp.name }}_[] = {
+{% for f in comp.inputs.fields %}    "{{ f.name }}",
+{% endfor %}};
+static const uint16_t SwcIf_InputEntrySizes_{{ comp.name }}_[] = {
+{% for f in comp.inputs.fields %}    (uint16_t)sizeof((({{ comp.inputs.type }} *)0)->{{ f.name }}),
+{% endfor %}};
+{% endif %}{% if comp.outputs and comp.outputs.fields is not none %}static const char * const SwcIf_OutputEntryNames_{{ comp.name }}_[] = {
+{% for f in comp.outputs.fields %}    "{{ f.name }}",
+{% endfor %}};
+static const uint16_t SwcIf_OutputEntrySizes_{{ comp.name }}_[] = {
+{% for f in comp.outputs.fields %}    (uint16_t)sizeof((({{ comp.outputs.type }} *)0)->{{ f.name }}),
+{% endfor %}};
+{% endif %}{% if comp.config and comp.config.fields is not none %}static const char * const SwcIf_ConfigEntryNames_{{ comp.name }}_[] = {
+{% for f in comp.config.fields %}    "{{ f.name }}",
+{% endfor %}};
+static const uint16_t SwcIf_ConfigEntrySizes_{{ comp.name }}_[] = {
+{% for f in comp.config.fields %}    (uint16_t)sizeof((({{ comp.config.type }} *)0)->{{ f.name }}),
+{% endfor %}};
+{% endif %}{% endfor %}
+#if (SWCIF_ENABLE_INSTANCE_INFO_API==STD_ON)
+const char * const SwcIf_InstanceNameTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    "{{ inst.name }}",
+{% endfor %}};
+#endif
+#if (SWCIF_ENABLE_INPUT_INFO_API==STD_ON)
+const char * const * const SwcIf_InputEntryNameTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    {% if inst.component.inputs and inst.component.inputs.fields is not none %}SwcIf_InputEntryNames_{{ inst.component.name }}_{% else %}NULL_PTR{% endif %},
+{% endfor %}};
+#endif
+#if (SWCIF_ENABLE_INPUT_INFO_API==STD_ON)
+const uint16_t * const SwcIf_InputEntrySizeTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    {% if inst.component.inputs and inst.component.inputs.fields is not none %}SwcIf_InputEntrySizes_{{ inst.component.name }}_{% else %}NULL_PTR{% endif %},
+{% endfor %}};
+#endif
+#if (SWCIF_ENABLE_OUTPUT_INFO_API==STD_ON)
+const char * const * const SwcIf_OutputEntryNameTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    {% if inst.component.outputs and inst.component.outputs.fields is not none %}SwcIf_OutputEntryNames_{{ inst.component.name }}_{% else %}NULL_PTR{% endif %},
+{% endfor %}};
+#endif
+#if (SWCIF_ENABLE_OUTPUT_INFO_API==STD_ON)
+const uint16_t * const SwcIf_OutputEntrySizeTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    {% if inst.component.outputs and inst.component.outputs.fields is not none %}SwcIf_OutputEntrySizes_{{ inst.component.name }}_{% else %}NULL_PTR{% endif %},
+{% endfor %}};
+#endif
+#if (SWCIF_ENABLE_CONFIG_INFO_API==STD_ON)
+const char * const * const SwcIf_ConfigEntryNameTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    {% if inst.component.config and inst.component.config.fields is not none %}SwcIf_ConfigEntryNames_{{ inst.component.name }}_{% else %}NULL_PTR{% endif %},
+{% endfor %}};
+#endif
+#if (SWCIF_ENABLE_CONFIG_INFO_API==STD_ON)
+const uint16_t * const SwcIf_ConfigEntrySizeTable_[SWCIF_INSTANCE_COUNT] = {
+{% for inst in instances %}    {% if inst.component.config and inst.component.config.fields is not none %}SwcIf_ConfigEntrySizes_{{ inst.component.name }}_{% else %}NULL_PTR{% endif %},
+{% endfor %}};
+#endif

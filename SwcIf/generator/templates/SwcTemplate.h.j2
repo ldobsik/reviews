@@ -1,0 +1,89 @@
+/* FILE: {{ comp.name }}.h (generated skeleton) */
+#ifndef {{ comp.name }}_H_
+#define {{ comp.name }}_H_
+
+#include <stdint.h>
+#include "std_types.h"
+
+{% set shared_io = comp.inputs and comp.outputs and comp.inputs.name == comp.outputs.name and comp.inputs.type == comp.outputs.type %}
+
+/* ========================================================================== */
+/* YAML-derived types (opaque if no fields)                                    */
+/* ========================================================================== */
+
+{% if comp.inputs %}
+{% if comp.inputs.fields is not none %}
+typedef struct
+{
+{% for f in comp.inputs.fields %}    {{ f.c_type }} {{ f.name }}{% if f.array_len %}[{{ f.array_len }}]{% endif %};
+{% endfor %}} {{ comp.inputs.type }};
+{% else %}
+typedef struct {{ comp.inputs.type }} {{ comp.inputs.type }};
+{% endif %}
+
+{% endif %}
+{% if comp.outputs and not (comp.inputs and comp.inputs.type == comp.outputs.type) %}
+{% if comp.outputs.fields is not none %}
+typedef struct
+{
+{% for f in comp.outputs.fields %}    {{ f.c_type }} {{ f.name }}{% if f.array_len %}[{{ f.array_len }}]{% endif %};
+{% endfor %}} {{ comp.outputs.type }};
+{% else %}
+typedef struct {{ comp.outputs.type }} {{ comp.outputs.type }};
+{% endif %}
+
+{% endif %}
+{% if comp.config %}
+{% if comp.config.fields is not none %}
+typedef struct
+{
+{% for f in comp.config.fields %}    {{ f.c_type }} {{ f.name }}{% if f.array_len %}[{{ f.array_len }}]{% endif %};
+{% endfor %}} {{ comp.config.type }};
+{% else %}
+typedef struct {{ comp.config.type }} {{ comp.config.type }};
+{% endif %}
+
+{% endif %}
+{% if comp.client_bindings %}
+/* Client bindings aggregate type (available for singleton and instance) */
+typedef struct
+{
+{% for p in comp.client_bindings.prototypes %}    {{ p.return_type }} (*{{ p.name }})({% if p.args|length == 0 %}void{% else %}{% for a in p.args %}{{ a.c_type }}{% if a.array_len %}[{{ a.array_len }}]{% endif %} {{ a.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %});
+{% endfor %}} {{ comp.name }}_ClientBindings_type;
+
+{% endif %}
+{% if comp.instance_type %}
+/* ========================================================================== */
+/* Instance type / runnables                                                   */
+/* ========================================================================== */
+
+typedef struct
+{
+{% if shared_io %}    {{ comp.inputs.type }} {{ comp.inputs.name }};
+{% else %}{% if comp.inputs %}    {{ comp.inputs.type }} {{ comp.inputs.name }};
+{% endif %}{% if comp.outputs %}    {{ comp.outputs.type }} {{ comp.outputs.name }};
+{% endif %}{% endif %}{% if comp.config %}    const {{ comp.config.type }} * {{ comp.config.ptr_name }};
+{% endif %}{% if comp.client_bindings %}    {{ comp.name }}_ClientBindings_type {{ comp.client_bindings.name }};
+{% endif %}    /* TODO: add state fields */
+} {{ comp.instance_type }};
+
+{% if comp.init_fn %}void {{ comp.init_fn }}({{ comp.instance_type }} * const self);
+{% endif %}{% if comp.step_fn %}void {{ comp.step_fn }}({{ comp.instance_type }} * const self);
+{% endif %}
+{% else %}
+/* ========================================================================== */
+/* Singleton runnables / globals                                               */
+/* ========================================================================== */
+
+{% if comp.init_fn %}void {{ comp.init_fn }}(void);
+{% endif %}{% if comp.step_fn %}void {{ comp.step_fn }}(void);
+{% endif %}
+{% if shared_io %}extern {{ comp.inputs.type }} {{ comp.inputs.name }};
+{% else %}{% if comp.inputs %}extern {{ comp.inputs.type }} {{ comp.inputs.name }};
+{% endif %}{% if comp.outputs %}extern {{ comp.outputs.type }} {{ comp.outputs.name }};
+{% endif %}{% endif %}{% if comp.config %}extern const {{ comp.config.type }} * {{ comp.config.ptr_name }};
+{% endif %}{% if comp.client_bindings %}extern {{ comp.name }}_ClientBindings_type {{ comp.client_bindings.name }};
+{% endif %}
+{% endif %}
+
+#endif /* {{ comp.name }}_H_ */

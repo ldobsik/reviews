@@ -1,0 +1,46 @@
+name: RearLampECU
+swcs:
+  - { name: LAMPDRV, yaml: swcs/LAMPDRV/LAMPDRV.yaml }
+  - { name: DRLPOS, yaml: swcs/DRLPOS/DRLPOS.yaml }
+  - { name: HEARTBEAT, yaml: swcs/HEARTBEAT/HEARTBEAT.yaml }
+engine:
+  mainfunction_period_ms: 5
+  integration_headers: [RearLampECU_DefaultCfg.h]
+  enable_input_raw_api: true
+  enable_output_raw_api: true
+  enable_config_raw_api: true
+  enable_input_ovr_api: true
+  enable_output_ovr_api: true
+  enable_instance_info_api: true
+  enable_input_info_api: true
+  enable_output_info_api: true
+  enable_config_info_api: true
+  ovr_slot_count: 4
+  ovr_buffer_len: 32
+  generate_validator_header: true
+instances:
+  - name: LAMPDRV_0
+    component: LAMPDRV
+  - name: DRLPOS_0
+    component: DRLPOS
+    default_config_ptr: "&RearLampECU_DRLPOS_DefaultCfg"
+    user_static_bind: true
+    client_bindings:
+      LampDriver_SetIntensity: SWCIF_SERVER(LAMPDRV_0, LAMPDRV_SetIntensity)
+      RearLampECU_ReadStatusFallback: RearLampECU_ReadStatusFallback
+  - name: HEARTBEAT_0
+    component: HEARTBEAT
+schedules:
+  default: NORMAL
+  items:
+    - name: NORMAL
+      period_ms: 10
+      switch_mode: deferred
+      expiry_points:
+        - { offset_ms: 0, run: [HEARTBEAT_0, LAMPDRV_0] }
+        - { offset_ms: 5, run: [DRLPOS_0, HEARTBEAT_0, LAMPDRV_0] }
+    - name: FAILSAFE
+      period_ms: 10
+      switch_mode: immediate
+      expiry_points:
+        - { offset_ms: 0, run: [HEARTBEAT_0, DRLPOS_0] }

@@ -1,0 +1,40 @@
+/* ========================================================================== */
+/* FILE: SwcIf_Gen.h (generated)                                               */
+/* ========================================================================== */
+/**
+ * @file SwcIf_Gen.h
+ * @brief Generated runtime integration declarations.
+ */
+#ifndef SWCIF_GEN_H_
+#define SWCIF_GEN_H_
+
+#include <stdint.h>
+#include "SwcIf_GenInc.h"
+
+enum
+{
+{% for inst in instances %}    SWCIF_INSTANCE_{{ inst.name }},
+{% endfor %}    SWCIF_INSTANCE_COUNT
+};
+
+enum
+{
+{% for sched in schedules %}    {{ sched.enum_name }} = {{ sched.idx }},
+{% endfor %}    SWCIF_SCHEDULE_COUNT
+};
+
+{% for inst in instances %}
+{% if inst.component.instance_type %}
+{% if inst.component.inputs %}void SwcIf_InputRoute_{{ inst.name }}({{ inst.component.instance_type }} * const self);
+{% endif %}{% if inst.component.outputs %}void SwcIf_OutputRoute_{{ inst.name }}({{ inst.component.instance_type }} * const self);
+{% endif %}{% if inst.user_static_bind %}void SwcIf_StaticBind_{{ inst.name }}({{ inst.component.instance_type }} * const self);
+{% endif %}{% else %}
+{% if inst.component.inputs %}void SwcIf_InputRoute_{{ inst.name }}(void);
+{% endif %}{% if inst.component.outputs %}void SwcIf_OutputRoute_{{ inst.name }}(void);
+{% endif %}{% if inst.user_static_bind %}void SwcIf_StaticBind_{{ inst.name }}(void);
+{% endif %}{% endif %}
+{% if inst.component.outputs %}const {{ inst.component.outputs.type }} * SwcIf_OutputCPtr_{{ inst.name }}(void);
+{% endif %}
+{% endfor %}
+
+#endif /* SWCIF_GEN_H_ */

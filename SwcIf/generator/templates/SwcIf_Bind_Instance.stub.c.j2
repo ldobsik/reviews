@@ -1,0 +1,52 @@
+/* ========================================================================== */
+/* FILE: SwcIf_Bind_{{ instance.name }}.stub.c (generated)                     */
+/* ========================================================================== */
+/**
+ * @file SwcIf_Bind_{{ instance.name }}.stub.c
+ * @brief Manual routing/binding stub for instance {{ instance.name }}.
+ */
+#include <stdint.h>
+
+#include "std_types.h"
+#include "SwcIf_IntCfg.h"
+#include "SwcIf.h"
+
+#define SWCIF_LOCAL_INSTANCE {{ instance.name }}
+
+{% if instance.component.instance_type %}
+{% if instance.user_static_bind %}void SWCIF_STATIC_BIND_FN(SWCIF_LOCAL_INSTANCE)({{ instance.component.instance_type }} * const self)
+{
+    /* TODO: Implement user static binding. */
+    (void)self;
+}
+
+{% endif %}{% if instance.component.inputs %}void SWCIF_IN_FN(SWCIF_LOCAL_INSTANCE)({{ instance.component.instance_type }} * const self)
+{
+    /* TODO: Implement input routing logic. */
+    (void)self;
+}
+
+{% endif %}{% if instance.component.outputs %}void SWCIF_OUT_FN(SWCIF_LOCAL_INSTANCE)({{ instance.component.instance_type }} * const self)
+{
+    /* TODO: Implement output routing logic. */
+    (void)self;
+}
+
+{% endif %}{% else %}
+{% if instance.user_static_bind %}void SWCIF_STATIC_BIND_FN(SWCIF_LOCAL_INSTANCE)(void)
+{
+    /* TODO: Implement singleton static binding. */
+}
+
+{% endif %}{% if instance.component.inputs %}void SWCIF_IN_FN(SWCIF_LOCAL_INSTANCE)(void)
+{
+    /* TODO: Implement singleton input routing logic. */
+}
+
+{% endif %}{% if instance.component.outputs %}void SWCIF_OUT_FN(SWCIF_LOCAL_INSTANCE)(void)
+{
+    /* TODO: Implement singleton output routing logic. */
+}
+
+{% endif %}{% endif %}
+#undef SWCIF_LOCAL_INSTANCE

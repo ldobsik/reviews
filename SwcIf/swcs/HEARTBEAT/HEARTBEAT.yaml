@@ -1,0 +1,9 @@
+component: HEARTBEAT
+public_headers: [HEARTBEAT.h]
+instance_type: HEARTBEAT_InstanceType
+init_fn: HEARTBEAT_initialize
+step_fn: HEARTBEAT_step
+servers:
+  - name: HEARTBEAT_GetTicks
+    return_type: uint32_t
+    args: []
