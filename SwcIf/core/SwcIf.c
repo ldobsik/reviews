@@ -21,17 +21,19 @@ static SwcIf_ScheduleType SwcIf_ActiveSchedule_;
 static SwcIf_ScheduleType SwcIf_NextSchedule_;
 static boolean SwcIf_ScheduleSwitchPending_;
 static boolean SwcIf_InstanceEnabled_[SWCIF_INSTANCE_COUNT];
+#if SWCIF_ANY_OVR
 static uint16_t SwcIf_ActiveOverrideCount_;
 static SwcIf_OvrSlotType SwcIf_OvrSlots_[SWCIF_OVR_SLOT_COUNT];
-
-static boolean SwcIf_IsValidInstance_(SwcIf_InstanceType instance)
-{
-    return (boolean)((instance >= 0) && (instance < SWCIF_INSTANCE_COUNT));
-}
 
 static boolean SwcIf_IsValidOvrSlot_(SwcIf_OvrSlotIdType ovr_slot_id)
 {
     return (boolean)(ovr_slot_id < SWCIF_OVR_SLOT_COUNT);
+}
+#endif
+
+static boolean SwcIf_IsValidInstance_(SwcIf_InstanceType instance)
+{
+    return (boolean)((instance >= 0) && (instance < SWCIF_INSTANCE_COUNT));
 }
 
 static boolean SwcIf_IsValidSchedule_(SwcIf_ScheduleType schedule)
@@ -47,7 +49,7 @@ static void SwcIf_ActivateSchedule_(SwcIf_ScheduleType schedule)
     SwcIf_NextSchedule_ = schedule;
 }
 
-#if (SWCIF_ANY_RAW_OR_OVR)
+#if (SWCIF_ANY_RAW || SWCIF_ANY_OVR)
 static uint8_t * SwcIf_ResolveRawPtr_(const SwcIf_EntrySpanType * span, SwcIf_AreaType area)
 {
     uint8_t * ret_ptr = NULL_PTR;
@@ -90,7 +92,9 @@ static uint8_t * SwcIf_ResolveRawPtr_(const SwcIf_EntrySpanType * span, SwcIf_Ar
 
     return ret_ptr;
 }
+#endif /* SWCIF_ANY_RAW || SWCIF_ANY_OVR */
 
+#if SWCIF_ANY_RAW
 static Std_ReturnType SwcIf_GetRaw_(const SwcIf_EntrySpanType * span, void * dst, SwcIf_AreaType area)
 {
     Std_ReturnType ret = E_NOT_OK;
@@ -107,8 +111,9 @@ static Std_ReturnType SwcIf_GetRaw_(const SwcIf_EntrySpanType * span, void * dst
 
     return ret;
 }
+#endif /* SWCIF_ANY_RAW */
 
-#if ((SWCIF_ENABLE_INPUT_OVR_API == STD_ON) || (SWCIF_ENABLE_OUTPUT_OVR_API == STD_ON))
+#if SWCIF_ANY_OVR
 static Std_ReturnType SwcIf_SetOvr_(SwcIf_OvrSlotIdType slot, SwcIf_AreaType area, const SwcIf_EntrySpanType * span, const void * src)
 {
     Std_ReturnType ret = E_NOT_OK;
@@ -130,7 +135,6 @@ static Std_ReturnType SwcIf_SetOvr_(SwcIf_OvrSlotIdType slot, SwcIf_AreaType are
     return ret;
 }
 
-#endif /* SWCIF_ANY_RAW_OR_OVR */
 static void SwcIf_ApplyOverrides_(SwcIf_InstanceType instance, SwcIf_AreaType area)
 {
     SwcIf_OvrSlotIdType slot;
@@ -149,7 +153,7 @@ static void SwcIf_ApplyOverrides_(SwcIf_InstanceType instance, SwcIf_AreaType ar
     }
     (void)area;
 }
-#endif
+#endif /* SWCIF_ANY_OVR */
 
 static void SwcIf_RunInstance_(SwcIf_InstanceType instance)
 {
@@ -168,24 +172,24 @@ static void SwcIf_RunInstance_(SwcIf_InstanceType instance)
 
 void SwcIf_Init(void)
 {
-    SwcIf_InstanceType instance;
-    SwcIf_OvrSlotIdType slot;
-
     SwcIf_ActivateSchedule_(SwcIf_DefaultSchedule_);
     SwcIf_ScheduleSwitchPending_ = FALSE;
-    SwcIf_ActiveOverrideCount_ = 0u;
 
-    for (instance = 0; instance < SWCIF_INSTANCE_COUNT; instance++) {
+    for (SwcIf_InstanceType instance = 0; instance < SWCIF_INSTANCE_COUNT; instance++) {
         SwcIf_InstanceEnabled_[(uint8_t)instance] = TRUE;
         SwcIf_BindFnTable_[(uint8_t)instance](SwcIf_InstanceObjectTable_[(uint8_t)instance]);
         SwcIf_InitFnTable_[(uint8_t)instance](SwcIf_InstanceObjectTable_[(uint8_t)instance]);
     }
 
-    for (slot = 0u; slot < SWCIF_OVR_SLOT_COUNT; slot++) {
+#if SWCIF_ANY_OVR
+    SwcIf_ActiveOverrideCount_ = 0u;
+
+    for (SwcIf_OvrSlotIdType slot = 0u; slot < SWCIF_OVR_SLOT_COUNT; slot++) {
         SwcIf_OvrSlots_[slot].target_ptr = NULL_PTR;
         SwcIf_OvrSlots_[slot].instance_id = -1;
         SwcIf_OvrSlots_[slot].byte_len = 0u;
     }
+#endif
 }
 
 void SwcIf_EnableInstance(SwcIf_InstanceType instance)
@@ -283,6 +287,8 @@ Std_ReturnType SwcIf_SetOutputOvr(SwcIf_OvrSlotIdType ovr_slot_id, const SwcIf_E
 }
 #endif
 
+
+#if SWCIF_ANY_OVR
 Std_ReturnType SwcIf_ClearOvr(SwcIf_OvrSlotIdType ovr_slot_id)
 {
     Std_ReturnType ret = E_NOT_OK;
@@ -312,6 +318,7 @@ boolean SwcIf_IsOvrActive(SwcIf_OvrSlotIdType ovr_slot_id)
 
     return ret;
 }
+#endif
 
 #if (SWCIF_ENABLE_INSTANCE_INFO_API == STD_ON)
 uint16_t SwcIf_GetInstanceCount(void)

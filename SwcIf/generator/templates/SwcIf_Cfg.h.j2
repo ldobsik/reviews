@@ -24,14 +24,16 @@
 #define SWCIF_OVR_BUFFER_LEN            {{ ecu.engine.ovr_buffer_len }}u
 
 /* Derived composite macro to gate RAW/OVR data/code generation */
-#if (SWCIF_ENABLE_INPUT_RAW_API == STD_ON)  || \
-    (SWCIF_ENABLE_OUTPUT_RAW_API == STD_ON) || \
-    (SWCIF_ENABLE_CONFIG_RAW_API == STD_ON) || \
-    (SWCIF_ENABLE_INPUT_OVR_API == STD_ON)  || \
-    (SWCIF_ENABLE_OUTPUT_OVR_API == STD_ON)
-    #define SWCIF_ANY_RAW_OR_OVR 1
-#else
-    #define SWCIF_ANY_RAW_OR_OVR 0
-#endif
+#define SWCIF_ANY_RAW ((SWCIF_ENABLE_INPUT_RAW_API == STD_ON)  || \
+                       (SWCIF_ENABLE_OUTPUT_RAW_API == STD_ON) || \
+                       (SWCIF_ENABLE_CONFIG_RAW_API == STD_ON))
+
+#define SWCIF_ANY_OVR ((SWCIF_ENABLE_INPUT_OVR_API == STD_ON)  || \
+                       (SWCIF_ENABLE_OUTPUT_OVR_API == STD_ON))
+
+#define SWCIF_ANY_INFO ((SWCIF_ENABLE_INPUT_INFO_API == STD_ON)  || \
+                        (SWCIF_ENABLE_OUTPUT_INFO_API == STD_ON) || \
+                        (SWCIF_ENABLE_CONFIG_INFO_API == STD_ON) || \
+                        (SWCIF_ENABLE_INSTANCE_INFO_API == STD_ON))
 
 #endif /* SWCIF_CFG_H_ */
