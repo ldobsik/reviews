@@ -151,6 +151,7 @@ Std_ReturnType SwcIf_SetInputOvr(SwcIf_OvrSlotIdType ovr_slot_id, const SwcIf_En
 Std_ReturnType SwcIf_SetOutputOvr(SwcIf_OvrSlotIdType ovr_slot_id, const SwcIf_EntrySpanType * span, const void * src);
 #endif
 
+#if SWCIF_ANY_OVR
 /**
  * @brief Clear one override slot.
  *
@@ -168,6 +169,7 @@ Std_ReturnType SwcIf_ClearOvr(SwcIf_OvrSlotIdType ovr_slot_id);
  * @return TRUE if active, FALSE otherwise.
  */
 boolean SwcIf_IsOvrActive(SwcIf_OvrSlotIdType ovr_slot_id);
+#endif
 
 /* ========================================================================== */
 /*  Public INFO API                                                           */

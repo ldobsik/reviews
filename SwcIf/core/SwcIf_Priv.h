@@ -65,10 +65,8 @@ extern const uint16_t SwcIf_ConfigEntryCountTable_[SWCIF_INSTANCE_COUNT];
 extern uint8_t * const SwcIf_InputBaseTable_[SWCIF_INSTANCE_COUNT];
 extern uint8_t * const SwcIf_OutputBaseTable_[SWCIF_INSTANCE_COUNT];
 extern const void * const * const SwcIf_ConfigPtrAddressTable_[SWCIF_INSTANCE_COUNT];
-extern const uint8_t SwcIf_SchedulePeriodTick_[SWCIF_SCHEDULE_COUNT];
 extern const SwcIf_ScheduleSwitchModeType SwcIf_ScheduleSwitchMode_[SWCIF_SCHEDULE_COUNT];
 extern const SwcIf_ScheduleExpiryPointType * const SwcIf_ScheduleExpiryPointTable_[SWCIF_SCHEDULE_COUNT];
-extern const uint8_t SwcIf_ScheduleExpiryPointCount_[SWCIF_SCHEDULE_COUNT];
 extern const SwcIf_ScheduleType SwcIf_DefaultSchedule_;
 
 #endif /* SWCIF_PRIV_H_ */
