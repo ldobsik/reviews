@@ -68,14 +68,14 @@ static void step_component_{{ comp.name }}_(void * const pself)
 {% for inst in instances %}{% if inst.component.config and inst.default_config_ptr %}static const {{ inst.component.config.type }} * const SwcIf_DefaultCfgPtr_{{ inst.name }}_ = {{ inst.default_config_ptr }};
 {% endif %}{% endfor %}
 
-{% for inst in instances %}{% for cb in inst.client_bindings %}{% if not cb.bind_expr %}static {{ cb.prototype.return_type }} SwcIf_NoOpClient_{{ inst.name }}_{{ cb.prototype.name }}_({% if cb.prototype.args|length == 0 %}void{% else %}{% for arg in cb.prototype.args %}{{ arg.c_type }} {{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %})
+{% for inst in instances %}{% for cb in inst.client_bindings %}{% set proto = cb.prototype %}static {{ proto.return_type }} SwcIf_NoOpClient_{{ inst.name }}_{{ proto.name }}_({% if proto.args|length == 0 %}void{% else %}{% for arg in proto.args %}{{ arg.c_type }} {{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %})
 {
-{% for arg in cb.prototype.args %} (void){{ arg.name }};
-{% endfor %}{% if cb.prototype.return_type != 'void' %} {{ cb.prototype.return_type }} ret = {0};
+{% for arg in proto.args %} (void){{ arg.name }};
+{% endfor %}{% if proto.return_type != 'void' %} {{ proto.return_type }} ret = {0};
  return ret;
 {% endif %}}
 
-{% endif %}{% endfor %}{% endfor %}{% for inst in instances %}{% for server in inst.component.servers %}{{ server.return_type }} SWCIF_SERVER({{ inst.name }}, {{ server.name }})({% if server.args|length == 0 %}void{% else %}{% for arg in server.args %}{{ arg.c_type }} {{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %})
+{% endfor %}{% endfor %}{% for inst in instances %}{% for server in inst.component.servers %}{{ server.return_type }} SWCIF_SERVER({{ inst.name }}, {{ server.name }})({% if server.args|length == 0 %}void{% else %}{% for arg in server.args %}{{ arg.c_type }} {{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %})
 {
 {% if server.return_type != 'void' %} {{ server.return_type }} ret = {0};
 {% if inst.component.instance_type %} ret = {{ server.name }}(&SwcIf_Instance_{{ inst.name }}_{% if server.args|length > 0 %}, {% for arg in server.args %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %});
@@ -89,13 +89,15 @@ static void step_component_{{ comp.name }}_(void * const pself)
 {
 {% if inst.component.instance_type %} {{ inst.component.instance_type }} * const self = ({{ inst.component.instance_type }} *)pself;
 {% if inst.component.config %} self->{{ inst.component.config.ptr_name }} = {% if inst.default_config_ptr %}SwcIf_DefaultCfgPtr_{{ inst.name }}_{% else %}NULL_PTR{% endif %};
-{% endif %}{% if inst.component.client_bindings %}{% for cb in inst.client_bindings %} self->{{ inst.component.client_bindings.name }}.{{ cb.prototype.name }} = {% if cb.bind_expr %}{{ cb.bind_expr }}{% else %}SwcIf_NoOpClient_{{ inst.name }}_{{ cb.prototype.name }}_{% endif %};
-{% endfor %}{% endif %}{% if inst.user_static_bind %} SwcIf_StaticBind_{{ inst.name }}(self);
+{% endif %}{% if inst.component.client_bindings %}{% for cb in inst.client_bindings %}{% if cb.prototype.array_size is none %} self->{{ inst.component.client_bindings.name }}.{{ cb.prototype.name }} = {% if cb.bind_expr %}{{ cb.bind_expr }}{% else %}SwcIf_NoOpClient_{{ inst.name }}_{{ cb.prototype.name }}_{% endif %};
+{% else %}{% for item in cb.items %} self->{{ inst.component.client_bindings.name }}.{{ cb.prototype.name }}[{{ item.index }}] = {% if item.bind_expr %}{{ item.bind_expr }}{% else %}SwcIf_NoOpClient_{{ inst.name }}_{{ cb.prototype.name }}_{% endif %};
+{% endfor %}{% endif %}{% endfor %}{% endif %}{% if inst.user_static_bind %} SwcIf_StaticBind_{{ inst.name }}(self);
 {% else %} (void)self;
 {% endif %}{% else %} (void)pself;
 {% if inst.component.config %} {{ inst.component.config.ptr_name }} = {% if inst.default_config_ptr %}SwcIf_DefaultCfgPtr_{{ inst.name }}_{% else %}NULL_PTR{% endif %};
-{% endif %}{% if inst.component.client_bindings %}{% for cb in inst.client_bindings %} {{ inst.component.client_bindings.name }}.{{ cb.prototype.name }} = {% if cb.bind_expr %}{{ cb.bind_expr }}{% else %}SwcIf_NoOpClient_{{ inst.name }}_{{ cb.prototype.name }}_{% endif %};
-{% endfor %}{% endif %}{% if inst.user_static_bind %} SwcIf_StaticBind_{{ inst.name }}();
+{% endif %}{% if inst.component.client_bindings %}{% for cb in inst.client_bindings %}{% if cb.prototype.array_size is none %} {{ inst.component.client_bindings.name }}.{{ cb.prototype.name }} = {% if cb.bind_expr %}{{ cb.bind_expr }}{% else %}SwcIf_NoOpClient_{{ inst.name }}_{{ cb.prototype.name }}_{% endif %};
+{% else %}{% for item in cb.items %} {{ inst.component.client_bindings.name }}.{{ cb.prototype.name }}[{{ item.index }}] = {% if item.bind_expr %}{{ item.bind_expr }}{% else %}SwcIf_NoOpClient_{{ inst.name }}_{{ cb.prototype.name }}_{% endif %};
+{% endfor %}{% endif %}{% endfor %}{% endif %}{% if inst.user_static_bind %} SwcIf_StaticBind_{{ inst.name }}();
 {% endif %}{% endif %}}
 
 {% if inst.component.outputs %}const {{ inst.component.outputs.type }} * SwcIf_OutputCPtr_{{ inst.name }}(void)

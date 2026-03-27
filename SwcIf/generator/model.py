@@ -29,6 +29,15 @@ class ClientSpec:
     name: str
     return_type: str
     args: List[ArgSpec] = field(default_factory=list)
+    array_size: Optional[int] = None
+
+    @property
+    def base_name(self) -> str:
+        return self.name
+
+    @property
+    def is_array(self) -> bool:
+        return self.array_size is not None
 
 
 @dataclass
