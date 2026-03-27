@@ -1,39 +1,4 @@
-/* ========================================================================== */
-/* FILE: SwcIf_Cfg.h (generated)                                               */
-/* ========================================================================== */
-/**
- * @file SwcIf_Cfg.h
- * @brief Generated SwcIf engine configuration.
- */
 #ifndef SWCIF_CFG_H_
 #define SWCIF_CFG_H_
-
-#include "std_types.h"
-
-#define SWCIF_MAINFUNCTION_PERIOD_MS    {{ ecu.engine.mainfunction_period_ms }}u
-#define SWCIF_ENABLE_INPUT_RAW_API      {{ 'STD_ON' if ecu.engine.enable_input_raw_api else 'STD_OFF' }}
-#define SWCIF_ENABLE_OUTPUT_RAW_API     {{ 'STD_ON' if ecu.engine.enable_output_raw_api else 'STD_OFF' }}
-#define SWCIF_ENABLE_CONFIG_RAW_API     {{ 'STD_ON' if ecu.engine.enable_config_raw_api else 'STD_OFF' }}
-#define SWCIF_ENABLE_INPUT_OVR_API      {{ 'STD_ON' if ecu.engine.enable_input_ovr_api else 'STD_OFF' }}
-#define SWCIF_ENABLE_OUTPUT_OVR_API     {{ 'STD_ON' if ecu.engine.enable_output_ovr_api else 'STD_OFF' }}
-#define SWCIF_ENABLE_INSTANCE_INFO_API  {{ 'STD_ON' if ecu.engine.enable_instance_info_api else 'STD_OFF' }}
-#define SWCIF_ENABLE_INPUT_INFO_API     {{ 'STD_ON' if ecu.engine.enable_input_info_api else 'STD_OFF' }}
-#define SWCIF_ENABLE_OUTPUT_INFO_API    {{ 'STD_ON' if ecu.engine.enable_output_info_api else 'STD_OFF' }}
-#define SWCIF_ENABLE_CONFIG_INFO_API    {{ 'STD_ON' if ecu.engine.enable_config_info_api else 'STD_OFF' }}
-#define SWCIF_OVR_SLOT_COUNT            {{ ecu.engine.ovr_slot_count }}u
-#define SWCIF_OVR_BUFFER_LEN            {{ ecu.engine.ovr_buffer_len }}u
-
-/* Derived composite macro to gate RAW/OVR data/code generation */
-#define SWCIF_ANY_RAW ((SWCIF_ENABLE_INPUT_RAW_API == STD_ON)  || \
-                       (SWCIF_ENABLE_OUTPUT_RAW_API == STD_ON) || \
-                       (SWCIF_ENABLE_CONFIG_RAW_API == STD_ON))
-
-#define SWCIF_ANY_OVR ((SWCIF_ENABLE_INPUT_OVR_API == STD_ON)  || \
-                       (SWCIF_ENABLE_OUTPUT_OVR_API == STD_ON))
-
-#define SWCIF_ANY_INFO ((SWCIF_ENABLE_INPUT_INFO_API == STD_ON)  || \
-                        (SWCIF_ENABLE_OUTPUT_INFO_API == STD_ON) || \
-                        (SWCIF_ENABLE_CONFIG_INFO_API == STD_ON) || \
-                        (SWCIF_ENABLE_INSTANCE_INFO_API == STD_ON))
-
+/* User override file: define only the values you intentionally override. */
 #endif /* SWCIF_CFG_H_ */

@@ -1,7 +1,7 @@
 name: SingletonDemoECU
 swcs:
-  - { name: LAMPDRV,      yaml: swcs/LAMPDRV/LAMPDRV.yaml }
-  - { name: FILTER,       yaml: swcs/FILTER/FILTER.yaml }
+  - { name: LAMPDRV, yaml: swcs/LAMPDRV/LAMPDRV.yaml }
+  - { name: FILTER, yaml: swcs/FILTER/FILTER.yaml }
   - { name: SENSORBRIDGE, yaml: swcs/SENSORBRIDGE/SENSORBRIDGE.yaml }
 engine:
   mainfunction_period_ms: 10
@@ -22,8 +22,9 @@ instances:
     component: FILTER
     default_config_ptr: "&SingletonDemoECU_FILTER_DefaultCfg"
     client_bindings:
-      LampDriver_SetIntensity: SWCIF_SERVER(LAMPDRV_0, LAMPDRV_SetIntensity)
-      Reset:                   SingletonDemoECU_Reset
+      Pwm_SetDutyCycle[0]: SingletonDemoECU_Pwm_SetDutyCycle_A
+      Pwm_SetDutyCycle[1]: SingletonDemoECU_Pwm_SetDutyCycle_B
+      Reset: SingletonDemoECU_Reset
   - name: SENSORBRIDGE
     component: SENSORBRIDGE
 schedules:

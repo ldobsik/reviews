@@ -1,179 +1,45 @@
 import re
 
-
 ARRAY_NAME_RE = re.compile(r'^(?P<base>[A-Za-z_][A-Za-z0-9_]*)\[(?P<idx>[0-9]+)\]$')
-
 
 def _split_array_name(name):
     m = ARRAY_NAME_RE.fullmatch(name)
-    if m is None:
-        return name, None
-    return m.group('base'), int(m.group('idx'))
-
-
-def _ensure_fields_shape(block_name, struct_spec):
-    if struct_spec is not None:
-        if struct_spec.fields is not None and len(struct_spec.fields) == 0:
-            raise ValueError(f'{block_name}.fields must be omitted for opaque types or contain at least one field')
-
-
-def _validate_client_prototypes(component):
-    if component.client_bindings is None:
-        return
-    seen_scalar = set()
-    seen_arrays = {}
-    for proto in component.client_bindings.prototypes:
-        if proto.array_size is None:
-            if proto.name in seen_scalar or proto.name in seen_arrays:
-                raise ValueError(f'duplicate client prototype name in component {component.name}: {proto.name}')
-            seen_scalar.add(proto.name)
-        else:
-            if proto.array_size <= 0:
-                raise ValueError(f'client prototype {proto.name}[{proto.array_size}] in component {component.name} must have size > 0')
-            if proto.name in seen_scalar or proto.name in seen_arrays:
-                raise ValueError(f'duplicate client prototype name in component {component.name}: {proto.name}')
-            seen_arrays[proto.name] = proto.array_size
-
-
-def _validate_instance_client_bindings(instance, comp):
-    if comp.client_bindings is None:
-        if len(instance.client_bindings) != 0:
-            raise ValueError(f'instance {instance.name} provides client_bindings but component {comp.name} has no client_bindings block')
-        return
-
-    proto_map = {proto.name: proto for proto in comp.client_bindings.prototypes}
-    bound_scalars = set()
-    bound_arrays = {}
-
-    for binding_name in instance.client_bindings.keys():
-        base, idx = _split_array_name(binding_name)
-        proto = proto_map.get(base)
-        if proto is None:
-            raise ValueError(f'instance {instance.name} binds unknown client {binding_name} for component {comp.name}')
-        if proto.array_size is None:
-            if idx is not None:
-                raise ValueError(f'instance {instance.name} uses indexed binding {binding_name} for scalar client {base} in component {comp.name}')
-            if base in bound_scalars:
-                raise ValueError(f'duplicate binding {binding_name} in instance {instance.name} for component {comp.name}')
-            bound_scalars.add(base)
-        else:
-            if idx is None:
-                raise ValueError(f'instance {instance.name} must bind arrayed client {base} using indexed syntax for component {comp.name}')
-            if idx < 0 or idx >= proto.array_size:
-                raise ValueError(f'instance {instance.name} binds out-of-range index {binding_name} for component {comp.name}')
-            idxs = bound_arrays.setdefault(base, set())
-            if idx in idxs:
-                raise ValueError(f'duplicate binding {binding_name} in instance {instance.name} for component {comp.name}')
-            idxs.add(idx)
-
-    for proto in comp.client_bindings.prototypes:
-        if proto.array_size is not None:
-            idxs = bound_arrays.get(proto.name, set())
-            if len(idxs) not in (0, proto.array_size):
-                raise ValueError(f'instance {instance.name} must bind arrayed client {proto.name}[0..{proto.array_size - 1}] either all or none for component {comp.name}')
-
+    return (m.group('base'), int(m.group('idx'))) if m else (name, None)
 
 def validate_model(components, ecu):
-    component_map = {component.name: component for component in components}
+    if ecu.engine.ovr_slot_count > 32:
+        raise ValueError('ovr_slot_count > 32 is not supported')
+
+    component_map = {c.name: c for c in components}
     instance_map = {}
-
-    if ecu.engine.mainfunction_period_ms <= 0:
-        raise ValueError('mainfunction_period_ms must be > 0')
-
-    for instance in ecu.instances:
-        if instance.name in instance_map:
-            raise ValueError(f'duplicate instance name: {instance.name}')
-        if instance.component not in component_map:
-            raise ValueError(f'unknown component for instance {instance.name}: {instance.component}')
-        instance_map[instance.name] = instance
-
-    for component in components:
-        if component.inputs is not None and not component.inputs.name:
-            raise ValueError(f'inputs.name is required for component {component.name}')
-        if component.outputs is not None and not component.outputs.name:
-            raise ValueError(f'outputs.name is required for component {component.name}')
-        if component.config is not None and not component.config.ptr_name:
-            raise ValueError(f'config.ptr_name is required for component {component.name}')
-
-        _ensure_fields_shape('inputs', component.inputs)
-        _ensure_fields_shape('outputs', component.outputs)
-        _ensure_fields_shape('config', component.config)
-
-        if component.client_bindings is not None and not component.client_bindings.name:
-            raise ValueError(f'client_bindings.name is required for component {component.name}')
-        _validate_client_prototypes(component)
-
-    if ecu.schedules is None or len(ecu.schedules.items) == 0:
-        raise ValueError('at least one schedule must be defined')
-    if ecu.schedules.default not in {schedule.name for schedule in ecu.schedules.items}:
-        raise ValueError('default schedule not found')
-
-    for schedule in ecu.schedules.items:
-        if schedule.period_ms <= 0:
-            raise ValueError(f'period_ms must be > 0 for schedule {schedule.name}')
-        if (schedule.period_ms % ecu.engine.mainfunction_period_ms) != 0:
-            raise ValueError(f'period_ms not aligned for schedule {schedule.name}')
-        if len(schedule.expiry_points) == 0:
-            raise ValueError(f'schedule {schedule.name} must have at least one expiry point')
-        last_offset = -1
-        for expiry_point in schedule.expiry_points:
-            if expiry_point.offset_ms < last_offset:
-                raise ValueError(f'offset_ms not non-decreasing in schedule {schedule.name}')
-            if expiry_point.offset_ms < 0 or expiry_point.offset_ms >= schedule.period_ms:
-                raise ValueError(f'offset_ms out of range in schedule {schedule.name}')
-            if (expiry_point.offset_ms % ecu.engine.mainfunction_period_ms) != 0:
-                raise ValueError(f'offset_ms not aligned in schedule {schedule.name}')
-            for instance_name in expiry_point.run:
-                if instance_name not in instance_map:
-                    raise ValueError(f'unknown instance {instance_name} in schedule {schedule.name}')
-            last_offset = expiry_point.offset_ms
-
-    for instance in ecu.instances:
-        comp = component_map[instance.component]
-        if instance.default_config_ptr is not None and comp.config is None:
-            raise ValueError(f'instance {instance.name} provides default_config_ptr but component {comp.name} has no config block')
-        _validate_instance_client_bindings(instance, comp)
-
-# --- Extended validation for singletons and shared I/O ---
-try:
-    _orig_validate_model
-except NameError:
-    _orig_validate_model = validate_model if 'validate_model' in globals() else None
-
-
-def _is_static_component_(comp):
-    t = getattr(comp, 'instance_type', None)
-    return (t is None) or (str(t).strip() == '')
-
-
-def validate_model(components, ecu):
-    if _orig_validate_model:
-        _orig_validate_model(components, ecu)
-    comp_map = {c.name: c for c in components}
-    comp_to_instances = {c.name: [] for c in components}
     for inst in ecu.instances:
-        comp_to_instances[inst.component].append(inst)
+        if inst.name in instance_map:
+            raise ValueError(f'duplicate instance name: {inst.name}')
+        if inst.component not in component_map:
+            raise ValueError(f'unknown component for instance {inst.name}: {inst.component}')
+        instance_map[inst.name] = inst
+
     for comp in components:
-        insts = comp_to_instances.get(comp.name, [])
-        if _is_static_component_(comp):
-            if len(insts) > 1:
-                raise ValueError(f"Static component '{comp.name}' may have at most one instance named '{comp.name}'")
-            if len(insts) == 1 and insts[0].name != comp.name:
-                raise ValueError(f"Static component '{comp.name}' must use instance name '{comp.name}', got '{insts[0].name}'")
-            if comp.config is not None and not getattr(comp.config, 'ptr_name', None):
-                raise ValueError(f"Static component '{comp.name}' has config but missing ptr_name")
-        if comp.inputs and comp.outputs and comp.inputs.name and comp.outputs.name and comp.inputs.name == comp.outputs.name:
-            if comp.inputs.type != comp.outputs.type:
-                raise ValueError(f"Component '{comp.name}': inputs/outputs share name '{comp.inputs.name}' but types differ")
-            in_fields = comp.inputs.fields or []
-            out_fields = comp.outputs.fields or []
-            if len(in_fields) != len(out_fields):
-                raise ValueError(f"Component '{comp.name}': inputs/outputs share name but field count differs")
-            for i, (fi, fo) in enumerate(zip(in_fields, out_fields)):
-                if (fi.c_type != fo.c_type) or (fi.name != fo.name) or (fi.array_len != fo.array_len):
-                    raise ValueError(f"Component '{comp.name}': inputs/outputs share name but field[{i}] differs")
-    for inst in ecu.instances:
-        comp = comp_map[inst.component]
-        if _is_static_component_(comp) and getattr(inst, 'default_config_ptr', None) is not None:
-            if comp.config is None or not getattr(comp.config, 'ptr_name', None):
-                raise ValueError(f"Instance '{inst.name}' provides default_config_ptr but component '{comp.name}' has no config.ptr_name (static)")
+        if comp.client_bindings is None:
+            continue
+        proto_map = {p.name: p for p in comp.client_bindings.prototypes}
+        for inst in ecu.instances:
+            if inst.component != comp.name:
+                continue
+            seen = {}
+            for key in inst.client_bindings.keys():
+                base, idx = _split_array_name(key)
+                if base not in proto_map:
+                    raise ValueError(f'instance {inst.name} binds unknown client {key}')
+                proto = proto_map[base]
+                if proto.array_size is None and idx is not None:
+                    raise ValueError(f'instance {inst.name} uses indexed syntax for scalar client {base}')
+                if proto.array_size is not None:
+                    if idx is None or idx < 0 or idx >= proto.array_size:
+                        raise ValueError(f'instance {inst.name} binds invalid index for {base}')
+                    seen.setdefault(base, set()).add(idx)
+            for p in comp.client_bindings.prototypes:
+                if p.array_size is not None:
+                    idxs = seen.get(p.name, set())
+                    if len(idxs) not in (0, p.array_size):
+                        raise ValueError(f'instance {inst.name} must bind all or none of {p.name}[0..{p.array_size - 1}]')

@@ -18,9 +18,9 @@ config:
 client_bindings:
   name: FILTER_Api
   prototypes:
-    - name: LampDriver_SetIntensity
+    - name: Pwm_SetDutyCycle[2]
       return_type: void
-      args: [ { type: uint8_t, name: channel }, { type: float, name: intensity } ]
+      args: [ { type: uint16_t, name: duty } ]
     - name: Reset
       return_type: void
       args: []

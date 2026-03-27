@@ -1,0 +1,21 @@
+/* ========================================================================== */
+/* FILE: SwcIf_Bind_{{ instance.name }}.h (generated template) */
+/* ========================================================================== */
+#ifndef SWCIF_BIND_{{ instance.name }}_H_
+#define SWCIF_BIND_{{ instance.name }}_H_
+#include <stdint.h>
+#include "std_types.h"
+#include "SwcIf_IntCfg.h"
+#include "SwcIf.h"
+#define SWCIF_LOCAL_INSTANCE {{ instance.name }}
+{% if instance.component.instance_type %}
+{% if instance.user_static_bind %}static inline void SWCIF_STATIC_BIND_FN(SWCIF_LOCAL_INSTANCE)({{ instance.component.instance_type }} * const self) { (void)self; }
+{% endif %}{% if instance.component.inputs %}static inline void SWCIF_IN_FN(SWCIF_LOCAL_INSTANCE)({{ instance.component.instance_type }} * const self) { (void)self; }
+{% endif %}{% if instance.component.outputs %}static inline void SWCIF_OUT_FN(SWCIF_LOCAL_INSTANCE)({{ instance.component.instance_type }} * const self) { (void)self; }
+{% endif %}{% else %}
+{% if instance.user_static_bind %}static inline void SWCIF_STATIC_BIND_FN(SWCIF_LOCAL_INSTANCE)(void) { }
+{% endif %}{% if instance.component.inputs %}static inline void SWCIF_IN_FN(SWCIF_LOCAL_INSTANCE)(void) { }
+{% endif %}{% if instance.component.outputs %}static inline void SWCIF_OUT_FN(SWCIF_LOCAL_INSTANCE)(void) { }
+{% endif %}{% endif %}
+#undef SWCIF_LOCAL_INSTANCE
+#endif /* SWCIF_BIND_{{ instance.name }}_H_ */

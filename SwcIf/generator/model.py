@@ -1,20 +1,17 @@
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-
 @dataclass
 class FieldSpec:
     c_type: str
     name: str
     array_len: Optional[str] = None
 
-
 @dataclass
 class ArgSpec:
     c_type: str
     name: str
     array_len: Optional[str] = None
-
 
 @dataclass
 class StructSpec:
@@ -23,7 +20,6 @@ class StructSpec:
     ptr_name: Optional[str] = None
     fields: Optional[List[FieldSpec]] = None
 
-
 @dataclass
 class ClientSpec:
     name: str
@@ -31,27 +27,16 @@ class ClientSpec:
     args: List[ArgSpec] = field(default_factory=list)
     array_size: Optional[int] = None
 
-    @property
-    def base_name(self) -> str:
-        return self.name
-
-    @property
-    def is_array(self) -> bool:
-        return self.array_size is not None
-
-
 @dataclass
 class ServerSpec:
     name: str
     return_type: str
     args: List[ArgSpec] = field(default_factory=list)
 
-
 @dataclass
 class ClientBindingsSpec:
     name: str
     prototypes: List[ClientSpec] = field(default_factory=list)
-
 
 @dataclass
 class ComponentSpec:
@@ -66,12 +51,10 @@ class ComponentSpec:
     client_bindings: Optional[ClientBindingsSpec] = None
     servers: List[ServerSpec] = field(default_factory=list)
 
-
 @dataclass
 class SwcImportSpec:
     name: str
     yaml: str
-
 
 @dataclass
 class InstanceSpec:
@@ -81,12 +64,10 @@ class InstanceSpec:
     user_static_bind: bool = False
     client_bindings: Dict[str, str] = field(default_factory=dict)
 
-
 @dataclass
 class ExpiryPointSpec:
     offset_ms: int
     run: List[str] = field(default_factory=list)
-
 
 @dataclass
 class ScheduleSpec:
@@ -95,12 +76,10 @@ class ScheduleSpec:
     switch_mode: str
     expiry_points: List[ExpiryPointSpec] = field(default_factory=list)
 
-
 @dataclass
 class SchedulesSpec:
     default: str
     items: List[ScheduleSpec] = field(default_factory=list)
-
 
 @dataclass
 class EngineSpec:
@@ -118,7 +97,6 @@ class EngineSpec:
     ovr_slot_count: int = 0
     ovr_buffer_len: int = 0
     generate_validator_header: bool = False
-
 
 @dataclass
 class EcuSpec:

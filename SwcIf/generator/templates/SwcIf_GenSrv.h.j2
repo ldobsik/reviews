@@ -1,19 +1,7 @@
-/* ========================================================================== */
-/*  FILE: SwcIf_GenSrv.h (generated)                                          */
-/* ========================================================================== */
-/**
- * @file SwcIf_GenSrv.h
- * @brief Exported generated server closure adapters.
- */
-
 #ifndef SWCIF_GENSRV_H_
 #define SWCIF_GENSRV_H_
 #include "SwcIf_GenInc.h"
 #include "SwcIf_Int.h"
-{% for inst in instances %}{% for server in inst.component.servers %}{{ server.return_type }} SWCIF_SERVER({{ inst.name }}, {{ server.name }})(
-{% if server.args | length == 0 %}    void
-{% else %}{% for arg in server.args %}    {{ arg.c_type }} {{ arg.name }}{% if not loop.last %},{% endif %}
-{% endfor %}{% endif %});
+{% for inst in instances %}{% for server in inst.component.servers %}{{ server.return_type }} SWCIF_SERVER({{ inst.name }}, {{ server.name }})({% if server.args|length == 0 %}void{% else %}{% for arg in server.args %}{{ arg.c_type }} {{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %});
 {% endfor %}{% endfor %}
 #endif /* SWCIF_GENSRV_H_ */
-
